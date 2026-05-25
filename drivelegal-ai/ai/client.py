@@ -1,21 +1,20 @@
+import os
+import time
 import google.generativeai as genai
 import streamlit as st
-import time
 
 # =========================================================
 # Configure Gemini Client
 # =========================================================
 
 def get_client():
-    api_key = (
-        st.secrets.get("GEMINI_API_KEY")
-        or st.secrets.get("GOOGLE_API_KEY")
-    )
+
+    api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         st.error(
-            "Gemini API key not found. "
-            "Add GEMINI_API_KEY to Streamlit secrets."
+            "Gemini API key not found.\n"
+            "Add GEMINI_API_KEY in Render Environment Variables."
         )
         st.stop()
 
@@ -40,19 +39,26 @@ def get_ai_response(
     )
 
     for attempt in range(max_retries):
+
         try:
             response = model.generate_content(prompt)
-            return response.text
+
+            if hasattr(response, "text"):
+                return response.text
+
+            return str(response)
 
         except Exception as e:
+
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
+
             else:
                 return f"Error: {str(e)}"
 
 
 # =========================================================
-# Image Analysis
+# Image AI Response
 # =========================================================
 
 def get_ai_response_with_image(
@@ -75,18 +81,22 @@ def get_ai_response_with_image(
     }
 
     try:
+
         response = model.generate_content(
             [prompt, image_part]
         )
 
-        return response.text
+        if hasattr(response, "text"):
+            return response.text
+
+        return str(response)
 
     except Exception as e:
         return f"Error analyzing image: {str(e)}"
 
 
 # =========================================================
-# Streaming AI Response
+# Streaming Response
 # =========================================================
 
 def stream_ai_response(
@@ -102,13 +112,15 @@ def stream_ai_response(
     )
 
     try:
+
         response = model.generate_content(
             prompt,
             stream=True
         )
 
         for chunk in response:
-            if chunk.text:
+
+            if hasattr(chunk, "text") and chunk.text:
                 yield chunk.text
 
     except Exception as e:
@@ -116,7 +128,7 @@ def stream_ai_response(
 
 
 # =========================================================
-# Wrapper Functions For App Compatibility
+# Chat Wrapper
 # =========================================================
 
 def chat(messages):
@@ -129,10 +141,17 @@ def chat(messages):
         prompt,
         system_prompt=(
             "You are DriveLegal AI, "
-            "an expert in Indian traffic laws."
+            "an expert in Indian traffic laws, "
+            "Motor Vehicle Act 2019, "
+            "challans, citizen rights, "
+            "fines, road safety, and traffic procedures."
         )
     )
 
+
+# =========================================================
+# Challan Validation
+# =========================================================
 
 def validate_challan_text(
     state,
@@ -141,19 +160,23 @@ def validate_challan_text(
 ):
 
     prompt = f"""
+    You are an Indian traffic law expert.
+
     State: {state}
 
     Violation: {violation}
 
     Fine Issued: ₹{fine}
 
-    Check whether this challan is legally valid
-    under Indian Motor Vehicle Act 2019.
+    Check if the challan is legally correct.
 
     Mention:
-    - correct legal fine
+    - legal fine
     - whether overcharged
-    - citizen rights
+    - section of law
+    - citizen advice
+
+    Use simple language.
     """
 
     return get_ai_response(prompt)
@@ -168,7 +191,7 @@ def validate_challan_with_image(
 ):
 
     prompt = f"""
-    Analyze this traffic challan image.
+    Analyze this Indian traffic challan image.
 
     State: {state}
 
@@ -176,12 +199,12 @@ def validate_challan_with_image(
 
     Fine Issued: ₹{fine}
 
-    Verify whether this challan appears legally correct.
+    Verify whether:
+    - challan looks genuine
+    - fine amount is legal
+    - any suspicious issue exists
 
-    Mention:
-    - correct legal fine
-    - whether overcharged
-    - suspicious details if any
+    Give clear legal explanation.
     """
 
     return get_ai_response_with_image(
@@ -190,6 +213,10 @@ def validate_challan_with_image(
         mime
     )
 
+
+# =========================================================
+# Dispute Letter Generator
+# =========================================================
 
 def generate_dispute_letter(
     name,
@@ -205,7 +232,7 @@ def generate_dispute_letter(
 ):
 
     prompt = f"""
-    Write a professional legal dispute letter.
+    Write a professional dispute letter.
 
     Name: {name}
 
@@ -215,28 +242,32 @@ def generate_dispute_letter(
 
     Challan Number: {challan_no}
 
-    Offence Date: {offence_date}
+    Date of Offence: {offence_date}
 
     Violation: {violation}
 
-    Fine Charged: ₹{fine_paid}
+    Fine Paid: ₹{fine_paid}
 
     Correct Legal Fine: ₹{legal_fine}
 
-    Grounds:
+    Grounds for Dispute:
     {grounds}
 
     State: {state}
 
-    Make the letter:
-    - formal
+    Requirements:
+    - formal legal tone
     - respectful
-    - legally strong
-    - ready to print
+    - print-ready
+    - professional formatting
     """
 
     return get_ai_response(prompt)
 
+
+# =========================================================
+# Compare States
+# =========================================================
 
 def compare_states(
     state1,
@@ -245,19 +276,28 @@ def compare_states(
 ):
 
     prompt = f"""
-    Compare traffic laws and fines for:
+    Compare traffic rules and penalties.
 
-    Violation: {violation}
+    Violation:
+    {violation}
 
-    State 1: {state1}
+    Compare:
+    {state1}
+    vs
+    {state2}
 
-    State 2: {state2}
-
-    Explain differences clearly.
+    Mention:
+    - fine difference
+    - rule difference
+    - enforcement difference
     """
 
     return get_ai_response(prompt)
 
+
+# =========================================================
+# Rights Advisor
+# =========================================================
 
 def explain_rights(query):
 
@@ -268,20 +308,27 @@ def explain_rights(query):
     {query}
 
     Mention:
-    - citizen rights
-    - police limits
-    - legal procedure
+    - legal rights
+    - what police can do
+    - what police cannot do
     - safety advice
+    - practical next steps
+
+    Keep it simple.
     """
 
     return get_ai_response(prompt)
 
+
+# =========================================================
+# General Legal Query
+# =========================================================
 
 def answer_legal_query(query):
 
     return get_ai_response(
         query,
         system_prompt=(
-            "You are an Indian traffic law expert."
+            "You are an expert in Indian traffic laws."
         )
     )
