@@ -1,3 +1,13 @@
+---
+title: DriveLegal AI
+emoji: 🚦
+colorFrom: red
+colorTo: orange
+sdk: streamlit
+sdk_version: 1.35.0
+app_file: app.py
+pinned: false
+---
 # 🚦 DriveLegal AI
 ### India's AI-Powered Traffic Law Assistant
 **Road Safety Hackathon 2026 · Track 1: DriveLegal · CoERS, IIT Madras × MoRTH**
