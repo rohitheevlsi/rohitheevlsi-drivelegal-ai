@@ -14,17 +14,17 @@ st.set_page_config(
 )
 
 # ── Local imports ─────────────────────────────────────────────────────────────
-from ui.styles import MAIN_CSS, LETTER_CSS
-from ui.components import (
+from styles import MAIN_CSS, LETTER_CSS
+from components import (
     hero, stat_row, section_header, result_box,
     emergency_sidebar, violation_select, state_select,
     language_select, display_fine_result, display_penalty_status,
 )
-from utils.calculators import (
+from calculators import (
     calculate_bac, calculate_fine, get_penalty_status,
     check_document, get_speed_limits, ROAD_TYPE_LABELS,
 )
-from ai.client import (
+from client import (
     chat, validate_challan_with_image, validate_challan_text,
     generate_dispute_letter, answer_legal_query,
     compare_states, explain_rights,
