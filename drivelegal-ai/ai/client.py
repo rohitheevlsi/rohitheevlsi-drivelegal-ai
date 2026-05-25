@@ -34,7 +34,7 @@ def get_ai_response(
     get_client()
 
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.0-flash",
         system_instruction=system_prompt if system_prompt else None
     )
 
@@ -71,7 +71,7 @@ def get_ai_response_with_image(
     get_client()
 
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.0-flash",
         system_instruction=system_prompt if system_prompt else None
     )
 
@@ -107,7 +107,7 @@ def stream_ai_response(
     get_client()
 
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-2.0-flash",
         system_instruction=system_prompt if system_prompt else None
     )
 
