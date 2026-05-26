@@ -20,21 +20,22 @@ The application directly addresses **Track 1 — DriveLegal: Simplifying Traffic
 | Package | Version | License | Purpose |
 |---------|---------|---------|---------|
 | `streamlit` | ≥1.32.0 | Apache 2.0 | Web UI framework — multi-tab layout, session state, file uploader |
-| `anthropic` | ≥0.25.0 | MIT | Official Claude AI Python SDK — text and vision inference |
+| `google-generativeai` | ≥0.8.5 | Apache 2.0 | Official Google Generative AI Python SDK — text and vision inference |
 | `Pillow` | ≥10.0.0 | HPND | Image preprocessing for challan photo upload (base64 encoding) |
 | `pytest` | ≥8.0.0 | MIT | Unit testing framework — 26 tests across 5 modules |
 
 **Full requirements.txt:**
 ```
-streamlit>=1.32.0
-anthropic>=0.25.0
-Pillow>=10.0.0
-pytest>=8.0.0
+streamlit
+google-generativeai>=0.8.5
+pandas
+numpy
+Pillow
 ```
 
 **Runtime:** Python 3.10+
 **Deployment:** Streamlit Community Cloud (free tier)
-**External APIs:** Anthropic Claude API (claude-opus-4-5)
+**External APIs:** Google Gemini API (gemini-2.0-flash)
 
 ---
 
@@ -74,7 +75,7 @@ User Input
 
 **Production-grade API client:** `client.py` implements exponential backoff retry logic, graceful error handling, and response streaming. This handles API rate limits and transient errors without crashing the user session.
 
-**Vision-capable challan validation:** Challan photos are preprocessed using PIL, encoded to base64, and sent to Claude's vision endpoint. The AI cross-references the photo against the legal fine schedule in `laws_data.py` and identifies discrepancies.
+**Vision-capable challan validation:** Challan photos are preprocessed using PIL, encoded to base64, and sent to Gemini's vision endpoint. The AI cross-references the photo against the legal fine schedule in `laws_data.py` and identifies discrepancies.
 
 ---
 
@@ -88,12 +89,12 @@ User Input
 ### 4.2 Challan Validator
 - User uploads photo (JPG/PNG)
 - PIL converts to RGB, encodes to base64
-- Sent to `claude-opus-4-5` vision endpoint
-- Claude identifies: violation type, claimed amount, legal amount, discrepancy flag
+- Sent to `gemini-2.0-flash` vision endpoint
+- Gemini identifies: violation type, claimed amount, legal amount, discrepancy flag
 
 ### 4.3 Dispute Letter Generator
 - Takes: violation type, location, date, officer name (optional), disputed amount
-- Claude generates a formal letter citing specific MV Act sections
+- Gemini generates a formal letter citing specific MV Act sections
 - Output is formatted for direct printing
 
 ### 4.4 Fine Calculator
@@ -183,7 +184,7 @@ Steps:
 1. Push repo to GitHub (public)
 2. Go to share.streamlit.io → New app
 3. Select repo, set main file to `app.py`
-4. Add `ANTHROPIC_API_KEY` in Settings → Secrets
+4. Add `GOOGLE_API_KEY` in Settings → Secrets
 5. Deploy
 
 ---

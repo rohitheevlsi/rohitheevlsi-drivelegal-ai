@@ -171,7 +171,7 @@ class TestDocumentChecker:
 
     def test_fine_populated(self):
         past = date.today() - timedelta(days=100)
-        result = check_document("no_pollution", past) if False else check_document("puc_certificate", past)
+        result = check_document("puc_certificate", past)
         assert result.fine_if_caught > 0
 
 

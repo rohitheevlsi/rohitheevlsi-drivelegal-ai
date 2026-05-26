@@ -2,19 +2,25 @@ import os
 import time
 import google.generativeai as genai
 import streamlit as st
+from laws_data import SYSTEM_PROMPT
 
 # =========================================================
 # Configure Gemini Client
 # =========================================================
 
 def get_client():
-
     api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        try:
+            if "GOOGLE_API_KEY" in st.secrets:
+                api_key = st.secrets["GOOGLE_API_KEY"]
+        except Exception:
+            pass
 
     if not api_key:
         st.error(
             "Gemini API key not found.\n"
-            "Add GOOGLE_API_KEY in Render Environment Variables."
+            "Please configure GOOGLE_API_KEY in Streamlit Secrets (.streamlit/secrets.toml) or as an Environment Variable."
         )
         st.stop()
 
@@ -30,29 +36,24 @@ def get_ai_response(
     system_prompt: str = "",
     max_retries: int = 3
 ) -> str:
-
     get_client()
+
+    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
     model = genai.GenerativeModel(
         model_name="gemini-2.0-flash",
-        system_instruction=system_prompt if system_prompt else None
+        system_instruction=effective_system_prompt if effective_system_prompt else None
     )
 
     for attempt in range(max_retries):
-
         try:
             response = model.generate_content(prompt)
-
             if hasattr(response, "text"):
                 return response.text
-
             return str(response)
-
         except Exception as e:
-
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
-
             else:
                 return f"Error: {str(e)}"
 
@@ -67,12 +68,13 @@ def get_ai_response_with_image(
     mime_type: str = "image/jpeg",
     system_prompt: str = ""
 ) -> str:
-
     get_client()
+
+    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
     model = genai.GenerativeModel(
         model_name="gemini-2.0-flash",
-        system_instruction=system_prompt if system_prompt else None
+        system_instruction=effective_system_prompt if effective_system_prompt else None
     )
 
     image_part = {
@@ -81,16 +83,12 @@ def get_ai_response_with_image(
     }
 
     try:
-
         response = model.generate_content(
             [prompt, image_part]
         )
-
         if hasattr(response, "text"):
             return response.text
-
         return str(response)
-
     except Exception as e:
         return f"Error analyzing image: {str(e)}"
 
@@ -103,26 +101,23 @@ def stream_ai_response(
     prompt: str,
     system_prompt: str = ""
 ):
-
     get_client()
+
+    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
     model = genai.GenerativeModel(
         model_name="gemini-2.0-flash",
-        system_instruction=system_prompt if system_prompt else None
+        system_instruction=effective_system_prompt if effective_system_prompt else None
     )
 
     try:
-
         response = model.generate_content(
             prompt,
             stream=True
         )
-
         for chunk in response:
-
             if hasattr(chunk, "text") and chunk.text:
                 yield chunk.text
-
     except Exception as e:
         yield f"Error: {str(e)}"
 
@@ -132,21 +127,10 @@ def stream_ai_response(
 # =========================================================
 
 def chat(messages):
-
     prompt = "\n".join(
         [f"{m['role']}: {m['content']}" for m in messages]
     )
-
-    return get_ai_response(
-        prompt,
-        system_prompt=(
-            "You are DriveLegal AI, "
-            "an expert in Indian traffic laws, "
-            "Motor Vehicle Act 2019, "
-            "challans, citizen rights, "
-            "fines, road safety, and traffic procedures."
-        )
-    )
+    return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
 # =========================================================
@@ -158,28 +142,21 @@ def validate_challan_text(
     violation,
     fine
 ):
-
     prompt = f"""
-    You are an Indian traffic law expert.
+    You are an Indian traffic law expert. Analyze this textual challenge:
+    State where issued: {state}
+    Violation charged: {violation}
+    Fine amount charged: ₹{fine}
 
-    State: {state}
-
-    Violation: {violation}
-
-    Fine Issued: ₹{fine}
-
-    Check if the challan is legally correct.
-
-    Mention:
-    - legal fine
-    - whether overcharged
-    - section of law
-    - citizen advice
-
-    Use simple language.
+    Check if the challan is legally correct and does not exceed the legal bounds.
+    
+    Make sure to follow these strict return rules:
+    - Start your answer immediately with either "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️"
+    - Provide the official legal fine according to the MV Act 2019 / state overrides in the database.
+    - Cite the exact Section of the law (e.g., Section 185, Section 129, etc.).
+    - Present clear, empowering advice for the citizen on what steps they should take.
     """
-
-    return get_ai_response(prompt)
+    return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
 def validate_challan_with_image(
@@ -189,28 +166,25 @@ def validate_challan_with_image(
     violation,
     fine
 ):
-
     prompt = f"""
-    Analyze this Indian traffic challan image.
-
-    State: {state}
-
-    Violation: {violation}
-
-    Fine Issued: ₹{fine}
+    Analyze this Indian traffic challan image visually.
+    State where issued: {state}
+    Violation charged on challan: {violation}
+    Fine amount charged: ₹{fine}
 
     Verify whether:
-    - challan looks genuine
-    - fine amount is legal
-    - any suspicious issue exists
+    - The challan image appears genuine and lists the correct details.
+    - The fine amount is legally correct under the MV Act 2019 / state overrides in the database.
+    - Any discrepancies or suspicious issues exist.
 
-    Give clear legal explanation.
+    Provide a clear, respectful, and empowering legal explanation. 
+    Start your response immediately with either "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️" based on the fine amount and legal details matching.
     """
-
     return get_ai_response_with_image(
         prompt,
         image_bytes,
-        mime
+        mime,
+        system_prompt=SYSTEM_PROMPT
     )
 
 
@@ -230,39 +204,31 @@ def generate_dispute_letter(
     grounds,
     state
 ):
-
     prompt = f"""
-    Write a professional dispute letter.
+    Generate a highly professional, formal, and print-ready dispute letter for a traffic challan.
 
-    Name: {name}
+    Driver Details:
+    - Name: {name}
+    - Address: {address}
+    - Vehicle Number: {vehicle}
+    - State of Offence: {state}
 
-    Address: {address}
+    Challan Details:
+    - Challan Number: {challan_no}
+    - Date of Offence: {offence_date}
+    - Violation Alleged: {violation}
+    - Fine Charged: ₹{fine_paid}
+    - Correct Legal Fine (per MV Act 2019): ₹{legal_fine}
 
-    Vehicle Number: {vehicle}
+    Dispute Details:
+    - Grounds for Dispute: {grounds}
 
-    Challan Number: {challan_no}
-
-    Date of Offence: {offence_date}
-
-    Violation: {violation}
-
-    Fine Paid: ₹{fine_paid}
-
-    Correct Legal Fine: ₹{legal_fine}
-
-    Grounds for Dispute:
-    {grounds}
-
-    State: {state}
-
-    Requirements:
-    - formal legal tone
-    - respectful
-    - print-ready
-    - professional formatting
+    Formatting and Tone:
+    - Formal legal tone, highly respectful yet firm on legal sections.
+    - Output must be a print-ready letter format with To/From placeholders, subject line, body paragraphs citing appropriate Motor Vehicle Act sections, and signature space.
+    - Do not include markdown code block syntax (like ```) in the letter text itself; make it directly copyable.
     """
-
-    return get_ai_response(prompt)
+    return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
 # =========================================================
@@ -274,25 +240,20 @@ def compare_states(
     state2,
     violation
 ):
-
     prompt = f"""
-    Compare traffic rules and penalties.
+    Compare the traffic rules, fine structures, and penalties between two Indian states.
 
-    Violation:
-    {violation}
+    Violation: {violation}
+    Comparing: {state1} vs {state2}
 
-    Compare:
-    {state1}
-    vs
-    {state2}
-
-    Mention:
-    - fine difference
-    - rule difference
-    - enforcement difference
+    Provide:
+    - Fine difference (citing exact rates in both states, including multipliers if applicable)
+    - Rule difference
+    - Key enforcement highlights or unique local rules for both states.
+    
+    Render the comparison clearly using bullet points and a side-by-side logical explanation.
     """
-
-    return get_ai_response(prompt)
+    return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
 # =========================================================
@@ -300,24 +261,19 @@ def compare_states(
 # =========================================================
 
 def explain_rights(query):
-
     prompt = f"""
-    Explain the legal rights of an Indian citizen
-    in this traffic police situation:
+    Explain the legal rights of an Indian citizen in this specific traffic police checkpoint or highway scenario:
 
-    {query}
+    Situation: {query}
 
-    Mention:
-    - legal rights
-    - what police can do
-    - what police cannot do
-    - safety advice
-    - practical next steps
-
-    Keep it simple.
+    Address:
+    - The relevant citizen rights (e.g., Section 129 CrPC, NALSA free legal aid, right to receipts).
+    - What police officers are legally authorized to do.
+    - What police officers are strictly prohibited from doing (e.g., taking car keys without FIR, demanding spot cash without e-challan).
+    - Practical safety and compliance advice.
+    - Concrete, actionable next steps.
     """
-
-    return get_ai_response(prompt)
+    return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
 # =========================================================
@@ -325,10 +281,4 @@ def explain_rights(query):
 # =========================================================
 
 def answer_legal_query(query):
-
-    return get_ai_response(
-        query,
-        system_prompt=(
-            "You are an expert in Indian traffic laws."
-        )
-    )
+    return get_ai_response(query, system_prompt=SYSTEM_PROMPT)

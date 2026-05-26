@@ -13,7 +13,7 @@ pinned: false
 **Road Safety Hackathon 2026 · Track 1: DriveLegal · CoERS, IIT Madras × MoRTH**
 
 [![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-FF6B35?logo=streamlit)](https://streamlit.io)
-[![Claude AI](https://img.shields.io/badge/Powered%20by-Claude%20AI-blueviolet)](https://anthropic.com)
+[![Gemini AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-blueviolet)](https://ai.google.dev)
 [![MV Act 2019](https://img.shields.io/badge/Data-MV%20Act%202019-green)](https://morth.nic.in)
 [![Tests](https://img.shields.io/badge/Tests-26%20passing-brightgreen)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -77,7 +77,7 @@ ai/client.py
     │
     ▼
 Anthropic Claude API
-(claude-opus-4-5 · Vision + Text)
+(gemini-2.0-flash · Vision + Text)
     │
     ▼
 Streamed Response → UI
@@ -103,9 +103,9 @@ pip install -r requirements.txt
 ### 2. Add your API key
 Create `.streamlit/secrets.toml`:
 ```toml
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+GOOGLE_API_KEY = "AIzaSyYourKeyHere"
 ```
-Get a free key at [console.anthropic.com](https://console.anthropic.com)
+Get a free key at [aistudio.google.com](https://aistudio.google.com)
 
 ### 3. Run
 ```bash
@@ -122,7 +122,7 @@ Open http://localhost:8501
 3. Select your repo → `app.py`
 4. **Settings → Secrets** → paste:
 ```toml
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+GOOGLE_API_KEY = "AIzaSyYourKeyHere"
 ```
 5. Click **Deploy** → instant public URL
 
@@ -171,7 +171,7 @@ AI Chat and Rights Advisor respond in:
 | Package | Version | Purpose |
 |---------|---------|---------|
 | streamlit | ≥1.32 | Web UI framework |
-| anthropic | ≥0.25 | Claude AI API client |
+| google-generativeai | ≥0.8.5 | Gemini AI API client |
 | Pillow | ≥10.0 | Image processing for challan upload |
 | pytest | ≥8.0 | Unit testing |
 
