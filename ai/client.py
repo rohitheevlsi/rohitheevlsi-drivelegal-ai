@@ -8,11 +8,12 @@ from laws_data import SYSTEM_PROMPT
 # Model Priority List — tries each in order until one works
 # =========================================================
 MODEL_PRIORITY = [
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
     "gemini-2.0-flash",
-    "gemini-2.0-flash-exp",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
-    "gemini-1.0-pro",
+    "gemini-flash-latest",
+    "gemini-pro-latest",
 ]
 
 
