@@ -100,7 +100,7 @@ Streamed Response → UI
 - **Zero external database** — all 18-state data embedded in `laws_data.py`
 - **Offline-first** — all calculators work without internet
 - **Production-grade** — exponential backoff, retry logic, error handling
-- **Vision-capable** — challan image analysis via base64 + Claude vision
+- **Vision-capable** — challan image analysis via base64 + Gemini vision
 
 ---
 

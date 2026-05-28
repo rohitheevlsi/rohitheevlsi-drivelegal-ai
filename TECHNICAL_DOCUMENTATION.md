@@ -46,23 +46,36 @@ Pillow
 rohitheevlsi-drivelegal-ai/
 ├── app.py              # Main Streamlit entry point (tabs, layout, session state)
 ├── laws_data.py        # Traffic law database (MV Act 2019 + 18 states)
-├── client.py           # Anthropic API wrapper (retry logic, streaming)
-├── calculators.py      # Pure Python calculators (BAC, fines, penalty pts)
-├── components.py       # Reusable Streamlit UI components
-├── styles.py           # CSS (dark theme, card layout)
-├── config.toml         # Streamlit server configuration
 ├── requirements.txt    # Python dependencies
-├── test_calculators.py # 26 unit tests
-└── __init__.py
+├── LICENSE             # MIT License
+├── README.md           # Product Overview & Quick Start
+├── TECHNICAL_DOCUMENTATION.md # This document
+├── ai/
+│   ├── __init__.py
+│   └── client.py       # Gemini API client wrapper (retry logic, streaming)
+├── utils/
+│   ├── __init__.py
+│   └── calculators.py  # Pure Python calculators (BAC, fines, penalty pts)
+├── ui/
+│   ├── __init__.py
+│   ├── components.py   # Reusable Streamlit UI components
+│   └── styles.py       # CSS (premium look, custom themes, dark mode)
+├── tests/
+│   ├── __init__.py
+│   └── test_calculators.py # 33 unit tests
+├── docs/
+│   └── overcharge_example.md # Sample overcharged challan details
+└── scripts/
+    └── generate_presentation_7.py # Pitch presentation generator script
 ```
 
 ### 3.2 Data Flow
 ```
 User Input
     │
-    ├─ Text query → laws_data.py (system prompt context) → Claude API → Streamed response
+    ├─ Text query → laws_data.py (system prompt context) → Gemini API → Streamed response
     │
-    ├─ Image upload (challan) → PIL base64 encode → Claude Vision API → Validation result
+    ├─ Image upload (challan) → PIL base64 encode → Gemini Vision API → Validation result
     │
     └─ Calculator input → calculators.py (pure Python) → Result (no API needed)
 ```
@@ -73,7 +86,7 @@ User Input
 
 **Offline-first calculators:** The BAC calculator (Widmark formula), fine calculator, penalty point tracker, document checker, and speed limit guide all run entirely in Python without any API calls. This ensures the app is useful even with no internet connection.
 
-**Production-grade API client:** `client.py` implements exponential backoff retry logic, graceful error handling, and response streaming. This handles API rate limits and transient errors without crashing the user session.
+**Production-grade API client:** `ai/client.py` implements exponential backoff retry logic, graceful error handling, and response streaming. This handles API rate limits and transient errors without crashing the user session.
 
 **Vision-capable challan validation:** Challan photos are preprocessed using PIL, encoded to base64, and sent to Gemini's vision endpoint. The AI cross-references the photo against the legal fine schedule in `laws_data.py` and identifies discrepancies.
 
@@ -83,7 +96,7 @@ User Input
 
 ### 4.1 AI Chat (Multilingual)
 - System prompt includes full MV Act 2019 fine schedule and state-specific rules
-- Language detection: user types in any of 11 languages; Claude responds in the same language
+- Language detection: user types in any of 11 languages; Gemini responds in the same language
 - Implemented as a streaming chat with session state for conversation history
 
 ### 4.2 Challan Validator
@@ -167,7 +180,7 @@ python -m pytest test_calculators.py -v
 
 1. **Fine data currency:** State-specific fine amounts are based on notifications available as of early 2026. MoRTH may update schedules; a production deployment would sync from an official API.
 2. **BAC formula:** The Widmark formula provides a population-average estimate. Individual metabolism varies. The app explicitly disclaims this.
-3. **Language detection:** The app relies on Claude to detect and respond in the user's language. Accuracy is high for the 11 supported languages but may vary for mixed-language inputs.
+3. **Language detection:** The app relies on Gemini to detect and respond in the user's language. Accuracy is high for the 11 supported languages but may vary for mixed-language inputs.
 4. **Image quality:** Challan validation accuracy depends on photo quality. Blurry or partially visible challans may not be validated correctly.
 5. **Offline mode:** AI-dependent features (Chat, Challan Validator, Dispute Letter) require an active internet connection. All calculator features work offline.
 
