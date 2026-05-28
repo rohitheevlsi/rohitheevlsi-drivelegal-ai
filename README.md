@@ -21,6 +21,8 @@ pinned: false
 
 > **One free app that gives every Indian driver the legal superpower of a lawyer.**
 
+![DriveLegal AI Dashboard Showcase](assets/dashboard_mockup.png)
+
 ---
 
 ## 🎯 The Problem
@@ -52,6 +54,17 @@ India records **1.7 lakh road fatalities annually** — 84% caused by driver neg
 | 🗺️ | **State Comparator** | Side-by-side rules comparison across any 2 states |
 | ⚖️ | **Know Your Rights** | What officers can/cannot do at checkpoints |
 | 🚗 | **Speed Limits Guide** | Complete speed limit table by road type & vehicle |
+
+---
+
+## 🔍 Real-World Example: Catching an Overcharged Challan
+Here is an example of how DriveLegal AI's **Challan Validator** catches a common traffic fine overcharge:
+
+![Overcharged Challan Example](assets/overcharged_challan_example.png)
+
+1. **The Issue:** A citizen was issued a challan for riding without a helmet, and charged a fine of **₹5,000**.
+2. **The Truth:** Under **Section 129 of the Motor Vehicles Act 2019**, the official legal penalty for a helmet violation is **₹1,000** (plus potential 3-month DL suspension in some states, but not ₹5,000).
+3. **The Solution:** The user uploads this photo to DriveLegal AI. The Challan Validator immediately flags it as **OVERCHARGED ❌**, cites the exact section of the law, and routes the user directly to the **Dispute Letter Generator** to instantly generate a formal appeal letter for the court or RTO.
 
 ---
 
