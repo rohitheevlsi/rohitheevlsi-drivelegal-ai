@@ -126,7 +126,7 @@ Then load it with `python-dotenv` or your IDE. Get a free key at [aistudio.googl
 ```bash
 streamlit run app.py
 ```
-Open http://localhost:8501
+Open https://rohitheevlsi-drivelegal-ai.onrender.com
 
 ---
 

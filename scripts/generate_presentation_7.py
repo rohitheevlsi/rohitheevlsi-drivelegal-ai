@@ -72,9 +72,7 @@ add_bullet_slide("Our Solution", [
     "Integrated calculators: fine, BAC, penalty points, document expiry, speed limits."
 ])
 
-# 4. Real‑World Overcharge Demo (image)
-add_image_slide("Demo: Over‑charge Detection", "C:/Users/rohit/.gemini/antigravity/brain/ffefbd62-1568-44d6-ad8b-3e37b1379f/real_challan_mockup_1779963537157.png", "AI flags ₹5,000 fine as OVERCHARGED – correct fine is ₹1,000.")
-
+add_bullet_slide("Demo: Over‑charge Detection", ["AI flags ₹5,000 fine as OVERCHARGED – correct fine is ₹1,000."])
 # 5. Impact & Benefits
 add_bullet_slide("Impact", [
     "💰 Saves drivers up to ₹50,000 per year by preventing over‑charges.",
@@ -96,4 +94,4 @@ add_title_slide("Thank You!", "Visit the live demo: https://rohitheevlsi-drivele
 
 # Save the presentation
 prs.save(output_path)
-print(f"7‑slide presentation generated at {output_path}")
+print(f"7-slide presentation generated at {output_path}")
