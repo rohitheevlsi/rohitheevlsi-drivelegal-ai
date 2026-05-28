@@ -40,13 +40,12 @@ def get_ai_response(
 
     effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=effective_system_prompt if effective_system_prompt else None
-    )
-
     for attempt in range(max_retries):
         try:
+            model = genai.GenerativeModel(
+                model_name="gemini-2.0-flash",
+                system_instruction=effective_system_prompt if effective_system_prompt else None
+            )
             response = model.generate_content(prompt)
             if hasattr(response, "text"):
                 return response.text
@@ -55,7 +54,18 @@ def get_ai_response(
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
             else:
-                return f"Error: {str(e)}"
+                # Fallback to gemini-1.5-flash
+                try:
+                    fallback_model = genai.GenerativeModel(
+                        model_name="gemini-1.5-flash",
+                        system_instruction=effective_system_prompt if effective_system_prompt else None
+                    )
+                    response = fallback_model.generate_content(prompt)
+                    if hasattr(response, "text"):
+                        return response.text
+                    return str(response)
+                except Exception as fe:
+                    return f"Error: {str(e)} (Fallback error: {str(fe)})"
 
 
 # =========================================================
@@ -72,17 +82,16 @@ def get_ai_response_with_image(
 
     effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=effective_system_prompt if effective_system_prompt else None
-    )
-
     image_part = {
         "mime_type": mime_type,
         "data": image_bytes
     }
 
     try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=effective_system_prompt if effective_system_prompt else None
+        )
         response = model.generate_content(
             [prompt, image_part]
         )
@@ -90,7 +99,20 @@ def get_ai_response_with_image(
             return response.text
         return str(response)
     except Exception as e:
-        return f"Error analyzing image: {str(e)}"
+        # Fallback to gemini-1.5-flash
+        try:
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=effective_system_prompt if effective_system_prompt else None
+            )
+            response = model.generate_content(
+                [prompt, image_part]
+            )
+            if hasattr(response, "text"):
+                return response.text
+            return str(response)
+        except Exception as fe:
+            return f"Error analyzing image: {str(e)} (Fallback error: {str(fe)})"
 
 
 # =========================================================
@@ -105,12 +127,12 @@ def stream_ai_response(
 
     effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
 
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=effective_system_prompt if effective_system_prompt else None
-    )
-
+    # Try 2.0-flash first
     try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=effective_system_prompt if effective_system_prompt else None
+        )
         response = model.generate_content(
             prompt,
             stream=True
@@ -119,7 +141,22 @@ def stream_ai_response(
             if hasattr(chunk, "text") and chunk.text:
                 yield chunk.text
     except Exception as e:
-        yield f"Error: {str(e)}"
+        # Fallback to gemini-1.5-flash on failure (like 429 quota exceeded)
+        try:
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=effective_system_prompt if effective_system_prompt else None
+            )
+            response = model.generate_content(
+                prompt,
+                stream=True
+            )
+            for chunk in response:
+                if hasattr(chunk, "text") and chunk.text:
+                    yield chunk.text
+        except Exception as fe:
+            yield f"Error: {str(e)} (Fallback error: {str(fe)})"
+
 
 
 # =========================================================
