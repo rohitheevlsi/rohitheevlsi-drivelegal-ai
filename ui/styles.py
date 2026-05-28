@@ -215,16 +215,71 @@ h1, h2, h3, .section-header, .hero-banner h1 {
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
+/* ── Premium Glass Cards (Vertical Block Border Wrapper) ── */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 107, 53, 0.12) !important;
+  border-radius: 18px !important;
+  padding: 1.5rem !important;
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+  transform: translateY(-5px) !important;
+  border-color: rgba(255, 107, 53, 0.45) !important;
+  box-shadow: 0 15px 35px rgba(255, 107, 53, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Custom card icon and layout helpers */
+.card-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.8rem;
+  display: inline-block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.card-title {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  margin-bottom: 0.5rem !important;
+}
+.card-desc {
+  font-size: 0.88rem !important;
+  color: rgba(245, 246, 250, 0.65) !important;
+  line-height: 1.5 !important;
+  min-height: 50px !important;
+  margin-bottom: 1.2rem !important;
+}
+
+/* ── Custom Styling for Native Chat Messages ── */
+div[data-testid="stChatMessage"] {
+  background-color: rgba(255, 255, 255, 0.01) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  padding: 1rem !important;
+  margin-bottom: 1rem !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+div[data-testid="stChatMessage"]:hover {
+  border-color: rgba(255, 107, 53, 0.25) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* ── Streamlit UI Widget Overrides (Futuristic Styling) ── */
 /* Primary Buttons with a beautiful hover glow */
 .stButton > button {
   background: linear-gradient(135deg, #FF6B35 0%, #E63946 50%, #7000FF 100%) !important;
   color: #fff !important;
   border: none !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
-  padding: 0.6rem 1.8rem !important;
+  padding: 0.65rem 2rem !important;
   letter-spacing: 0.5px !important;
   box-shadow: 0 4px 15px rgba(255, 107, 53, 0.25) !important;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
@@ -237,6 +292,18 @@ h1, h2, h3, .section-header, .hero-banner h1 {
 }
 .stButton > button:active {
   transform: translateY(1px) !important;
+}
+
+/* Secondary Button / Back button customization */
+.stButton > button[key*="back"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.stButton > button[key*="back"]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 107, 53, 0.3) !important;
 }
 
 /* Beautiful Inputs & Textareas */
@@ -282,8 +349,8 @@ h1, h2, h3, .section-header, .hero-banner h1 {
 /* Elegant Metric Display override */
 div[data-testid="stMetric"] {
   background: rgba(255, 255, 255, 0.02) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
   backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   border: 1px solid rgba(255, 107, 53, 0.12) !important;
   border-radius: 16px !important;
   padding: 1rem 1.2rem !important;
@@ -325,6 +392,7 @@ section[data-testid="stSidebar"] .stDivider {
   border-radius: 14px !important;
 }
 </style>
+
 """
 
 LETTER_CSS = """

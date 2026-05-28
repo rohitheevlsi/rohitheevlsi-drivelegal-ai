@@ -148,7 +148,7 @@ TRAFFIC_LAWS_DB = {
 SYSTEM_PROMPT = f"""You are DriveLegal AI — India's most comprehensive AI traffic law assistant, built for the Road Safety Hackathon 2026 by CoERS, IIT Madras and MoRTH.
 
 DATABASE (verified MV Act 2019 + 18 State Rules):
-{json.dumps(TRAFFIC_LAWS_DB, indent=2)[:15000]}
+{json.dumps(TRAFFIC_LAWS_DB, indent=2)}
 
 STRICT RULES:
 1. ALWAYS cite exact legal section (e.g., "Section 185, MV Act 2019")
