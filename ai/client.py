@@ -5,6 +5,18 @@ import streamlit as st
 from laws_data import SYSTEM_PROMPT
 
 # =========================================================
+# Model Priority List — tries each in order until one works
+# =========================================================
+MODEL_PRIORITY = [
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-exp",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro-latest",
+    "gemini-1.0-pro",
+]
+
+
+# =========================================================
 # Configure Gemini Client
 # =========================================================
 
@@ -19,144 +31,103 @@ def get_client():
 
     if not api_key:
         st.error(
-            "Gemini API key not found.\n"
-            "Please configure GOOGLE_API_KEY in Streamlit Secrets (.streamlit/secrets.toml) or as an Environment Variable."
+            "⚠️ Gemini API key not found.\n"
+            "Please configure GOOGLE_API_KEY in your Render Environment Variables."
         )
         st.stop()
 
     genai.configure(api_key=api_key)
 
 
+def _build_model(model_name: str, system_prompt: str):
+    """Build a GenerativeModel, skipping system_instruction for older models."""
+    try:
+        return genai.GenerativeModel(
+            model_name=model_name,
+            system_instruction=system_prompt if system_prompt else None,
+        )
+    except Exception:
+        return genai.GenerativeModel(model_name=model_name)
+
+
 # =========================================================
-# Basic AI Response
+# Core: try every model until one succeeds
 # =========================================================
 
-def get_ai_response(
-    prompt: str,
-    system_prompt: str = "",
-    max_retries: int = 3
-) -> str:
+def get_ai_response(prompt: str, system_prompt: str = "") -> str:
     get_client()
+    effective_sp = system_prompt if system_prompt else SYSTEM_PROMPT
+    last_error = "Unknown error"
 
-    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
-
-    for attempt in range(max_retries):
+    for model_name in MODEL_PRIORITY:
         try:
-            model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash",
-                system_instruction=effective_system_prompt if effective_system_prompt else None
-            )
+            model = _build_model(model_name, effective_sp)
             response = model.generate_content(prompt)
-            if hasattr(response, "text"):
+            if hasattr(response, "text") and response.text:
                 return response.text
             return str(response)
         except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(2 ** attempt)
-            else:
-                # Fallback to gemini-1.5-flash
-                try:
-                    fallback_model = genai.GenerativeModel(
-                        model_name="gemini-1.5-flash",
-                        system_instruction=effective_system_prompt if effective_system_prompt else None
-                    )
-                    response = fallback_model.generate_content(prompt)
-                    if hasattr(response, "text"):
-                        return response.text
-                    return str(response)
-                except Exception as fe:
-                    return f"Error: {str(e)} (Fallback error: {str(fe)})"
+            last_error = str(e)
+            time.sleep(0.5)   # brief pause before trying next model
+            continue
 
+    return (
+        f"⚠️ All AI models are currently unavailable. "
+        f"Last error: {last_error}\n\n"
+        f"Please try again in a few minutes or check your API key quota at "
+        f"https://aistudio.google.com"
+    )
 
-# =========================================================
-# Image AI Response
-# =========================================================
 
 def get_ai_response_with_image(
     prompt: str,
     image_bytes: bytes,
     mime_type: str = "image/jpeg",
-    system_prompt: str = ""
+    system_prompt: str = "",
 ) -> str:
     get_client()
+    effective_sp = system_prompt if system_prompt else SYSTEM_PROMPT
+    image_part = {"mime_type": mime_type, "data": image_bytes}
+    last_error = "Unknown error"
 
-    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
-
-    image_part = {
-        "mime_type": mime_type,
-        "data": image_bytes
-    }
-
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=effective_system_prompt if effective_system_prompt else None
-        )
-        response = model.generate_content(
-            [prompt, image_part]
-        )
-        if hasattr(response, "text"):
-            return response.text
-        return str(response)
-    except Exception as e:
-        # Fallback to gemini-1.5-flash
+    for model_name in MODEL_PRIORITY:
         try:
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                system_instruction=effective_system_prompt if effective_system_prompt else None
-            )
-            response = model.generate_content(
-                [prompt, image_part]
-            )
-            if hasattr(response, "text"):
+            model = _build_model(model_name, effective_sp)
+            response = model.generate_content([prompt, image_part])
+            if hasattr(response, "text") and response.text:
                 return response.text
             return str(response)
-        except Exception as fe:
-            return f"Error analyzing image: {str(e)} (Fallback error: {str(fe)})"
+        except Exception as e:
+            last_error = str(e)
+            time.sleep(0.5)
+            continue
+
+    return f"⚠️ Unable to analyse image. Last error: {last_error}"
 
 
-# =========================================================
-# Streaming Response
-# =========================================================
-
-def stream_ai_response(
-    prompt: str,
-    system_prompt: str = ""
-):
+def stream_ai_response(prompt: str, system_prompt: str = ""):
     get_client()
+    effective_sp = system_prompt if system_prompt else SYSTEM_PROMPT
+    last_error = "Unknown error"
 
-    effective_system_prompt = system_prompt if system_prompt else SYSTEM_PROMPT
-
-    # Try 2.0-flash first
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=effective_system_prompt if effective_system_prompt else None
-        )
-        response = model.generate_content(
-            prompt,
-            stream=True
-        )
-        for chunk in response:
-            if hasattr(chunk, "text") and chunk.text:
-                yield chunk.text
-    except Exception as e:
-        # Fallback to gemini-1.5-flash on failure (like 429 quota exceeded)
+    for model_name in MODEL_PRIORITY:
         try:
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                system_instruction=effective_system_prompt if effective_system_prompt else None
-            )
-            response = model.generate_content(
-                prompt,
-                stream=True
-            )
+            model = _build_model(model_name, effective_sp)
+            response = model.generate_content(prompt, stream=True)
             for chunk in response:
                 if hasattr(chunk, "text") and chunk.text:
                     yield chunk.text
-        except Exception as fe:
-            yield f"Error: {str(e)} (Fallback error: {str(fe)})"
+            return   # success — stop trying other models
+        except Exception as e:
+            last_error = str(e)
+            time.sleep(0.5)
+            continue
 
+    yield (
+        f"⚠️ All AI models are currently unavailable. "
+        f"Last error: {last_error}\n\n"
+        f"Please try again in a few minutes."
+    )
 
 
 # =========================================================
@@ -164,9 +135,7 @@ def stream_ai_response(
 # =========================================================
 
 def chat(messages):
-    prompt = "\n".join(
-        [f"{m['role']}: {m['content']}" for m in messages]
-    )
+    prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
     return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
@@ -174,55 +143,35 @@ def chat(messages):
 # Challan Validation
 # =========================================================
 
-def validate_challan_text(
-    state,
-    violation,
-    fine
-):
+def validate_challan_text(state, violation, fine):
     prompt = f"""
-    You are an Indian traffic law expert. Analyze this textual challenge:
+    You are an Indian traffic law expert. Analyze this challan:
     State where issued: {state}
     Violation charged: {violation}
     Fine amount charged: ₹{fine}
 
     Check if the challan is legally correct and does not exceed the legal bounds.
-    
-    Make sure to follow these strict return rules:
-    - Start your answer immediately with either "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️"
-    - Provide the official legal fine according to the MV Act 2019 / state overrides in the database.
+
+    STRICT RULES:
+    - Start your answer IMMEDIATELY with either "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️"
+    - Provide the official legal fine according to the MV Act 2019 / state overrides.
     - Cite the exact Section of the law (e.g., Section 185, Section 129, etc.).
-    - Present clear, empowering advice for the citizen on what steps they should take.
+    - Present clear, empowering advice for the citizen on what steps to take.
     """
     return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
 
-def validate_challan_with_image(
-    image_bytes,
-    mime,
-    state,
-    violation,
-    fine
-):
+def validate_challan_with_image(image_bytes, mime, state, violation, fine):
     prompt = f"""
     Analyze this Indian traffic challan image visually.
     State where issued: {state}
     Violation charged on challan: {violation}
     Fine amount charged: ₹{fine}
 
-    Verify whether:
-    - The challan image appears genuine and lists the correct details.
-    - The fine amount is legally correct under the MV Act 2019 / state overrides in the database.
-    - Any discrepancies or suspicious issues exist.
-
-    Provide a clear, respectful, and empowering legal explanation. 
-    Start your response immediately with either "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️" based on the fine amount and legal details matching.
+    Verify whether the fine is legally correct under the MV Act 2019.
+    Start your response immediately with "VALID ✅", "OVERCHARGED ❌", or "DISPUTABLE ⚠️".
     """
-    return get_ai_response_with_image(
-        prompt,
-        image_bytes,
-        mime,
-        system_prompt=SYSTEM_PROMPT
-    )
+    return get_ai_response_with_image(prompt, image_bytes, mime, system_prompt=SYSTEM_PROMPT)
 
 
 # =========================================================
@@ -230,16 +179,8 @@ def validate_challan_with_image(
 # =========================================================
 
 def generate_dispute_letter(
-    name,
-    address,
-    vehicle,
-    challan_no,
-    offence_date,
-    violation,
-    fine_paid,
-    legal_fine,
-    grounds,
-    state
+    name, address, vehicle, challan_no,
+    offence_date, violation, fine_paid, legal_fine, grounds, state
 ):
     prompt = f"""
     Generate a highly professional, formal, and print-ready dispute letter for a traffic challan.
@@ -257,13 +198,12 @@ def generate_dispute_letter(
     - Fine Charged: ₹{fine_paid}
     - Correct Legal Fine (per MV Act 2019): ₹{legal_fine}
 
-    Dispute Details:
-    - Grounds for Dispute: {grounds}
+    Dispute Grounds: {grounds}
 
-    Formatting and Tone:
-    - Formal legal tone, highly respectful yet firm on legal sections.
-    - Output must be a print-ready letter format with To/From placeholders, subject line, body paragraphs citing appropriate Motor Vehicle Act sections, and signature space.
-    - Do not include markdown code block syntax (like ```) in the letter text itself; make it directly copyable.
+    Formatting:
+    - Formal legal tone, respectful yet firm on legal sections.
+    - Print-ready letter with To/From, subject line, body citing MV Act sections, and signature space.
+    - Do NOT include markdown code blocks (```).
     """
     return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
@@ -272,11 +212,7 @@ def generate_dispute_letter(
 # Compare States
 # =========================================================
 
-def compare_states(
-    state1,
-    state2,
-    violation
-):
+def compare_states(state1, state2, violation):
     prompt = f"""
     Compare the traffic rules, fine structures, and penalties between two Indian states.
 
@@ -285,10 +221,10 @@ def compare_states(
 
     Provide:
     - Fine difference (citing exact rates in both states, including multipliers if applicable)
-    - Rule difference
+    - Rule differences
     - Key enforcement highlights or unique local rules for both states.
-    
-    Render the comparison clearly using bullet points and a side-by-side logical explanation.
+
+    Use bullet points and a clear side-by-side logical explanation.
     """
     return get_ai_response(prompt, system_prompt=SYSTEM_PROMPT)
 
@@ -299,14 +235,14 @@ def compare_states(
 
 def explain_rights(query):
     prompt = f"""
-    Explain the legal rights of an Indian citizen in this specific traffic police checkpoint or highway scenario:
+    Explain the legal rights of an Indian citizen in this traffic police checkpoint scenario:
 
     Situation: {query}
 
     Address:
     - The relevant citizen rights (e.g., Section 129 CrPC, NALSA free legal aid, right to receipts).
     - What police officers are legally authorized to do.
-    - What police officers are strictly prohibited from doing (e.g., taking car keys without FIR, demanding spot cash without e-challan).
+    - What police officers are strictly PROHIBITED from doing.
     - Practical safety and compliance advice.
     - Concrete, actionable next steps.
     """

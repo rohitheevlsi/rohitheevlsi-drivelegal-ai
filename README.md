@@ -76,7 +76,7 @@ ai/client.py
  error handling)
     │
     ▼
-Anthropic Claude API
+Google Gemini API
 (gemini-2.0-flash · Vision + Text)
     │
     ▼
