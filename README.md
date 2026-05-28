@@ -17,7 +17,7 @@ pinned: false
 [![MV Act 2019](https://img.shields.io/badge/Data-MV%20Act%202019-green)](https://morth.nic.in)
 [![Tests](https://img.shields.io/badge/Tests-26%20passing-brightgreen)](#testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-00B4D8)](https://drivelegal-ai.streamlit.app)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-00B4D8)](https://rohitheevlsi-drivelegal-ai.onrender.com)
 
 > **One free app that gives every Indian driver the legal superpower of a lawyer.**
 
@@ -114,11 +114,13 @@ pip install -r requirements.txt
 ```
 
 ### 2. Add your API key
-Create `.streamlit/secrets.toml`:
-```toml
-GOOGLE_API_KEY = "AIzaSyYourKeyHere"
+For **Render** deployment, set an environment variable named `GOOGLE_API_KEY` in your Render dashboard (Settings → Environment → Add Variable). The app reads this variable automatically.
+
+If you run locally, you can create a `.env` file in the project root:
+```text
+GOOGLE_API_KEY=AIzaSyYourKeyHere
 ```
-Get a free key at [aistudio.google.com](https://aistudio.google.com)
+Then load it with `python-dotenv` or your IDE. Get a free key at [aistudio.google.com](https://aistudio.google.com).
 
 ### 3. Run
 ```bash
@@ -128,16 +130,13 @@ Open http://localhost:8501
 
 ---
 
-## ☁️ Deploy to Streamlit Cloud (Free · 10 minutes)
+## ☁️ Deploy to Render (Free tier)
 
-1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
-3. Select your repo → `app.py`
-4. **Settings → Secrets** → paste:
-```toml
-GOOGLE_API_KEY = "AIzaSyYourKeyHere"
-```
-5. Click **Deploy** → instant public URL
+1. Push this repo to GitHub (or your preferred Git host).
+2. In the Render dashboard, click **New Web Service**.
+3. Connect your repository and set the **Build Command** to `pip install -r requirements.txt` and the **Start Command** to `streamlit run app.py`.
+4. Under **Environment**, add a variable `GOOGLE_API_KEY` with your API key value.
+5. Click **Create Web Service** – Render will build and provide a public URL (e.g., `https://your-app.onrender.com`).
 
 ---
 
