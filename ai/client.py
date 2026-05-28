@@ -26,13 +26,15 @@ def get_client():
         try:
             if "GOOGLE_API_KEY" in st.secrets:
                 api_key = st.secrets["GOOGLE_API_KEY"]
+            elif "google" in st.secrets and "GOOGLE_API_KEY" in st.secrets["google"]:
+                api_key = st.secrets["google"]["GOOGLE_API_KEY"]
         except Exception:
             pass
 
     if not api_key:
         st.error(
             "⚠️ Gemini API key not found.\n"
-            "Please configure GOOGLE_API_KEY in your Render Environment Variables."
+            "Please configure GOOGLE_API_KEY in your Render Environment Variables or .streamlit/secrets.toml."
         )
         st.stop()
 
